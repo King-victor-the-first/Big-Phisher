@@ -32,7 +32,14 @@ const analyzeUrlMessagePrompt = ai.definePrompt({
   name: 'analyzeUrlMessagePrompt',
   input: {schema: AnalyzeUrlMessageInputSchema},
   output: {schema: AnalyzeUrlMessageOutputSchema},
-  prompt: `You are an AI assistant designed to detect phishing attempts. Analyze the following input and determine if it is potentially phishing or malicious.\n\nInput: {{{input}}}\n\nRespond with whether or not the input is phishing and the reason for your determination.\n`,
+  prompt: `You are an AI assistant designed to detect phishing attempts. Analyze the following input and determine if it is potentially phishing or malicious.
+
+When analyzing URLs, if you encounter variations of 'google.com' (e.g., 'Goggle.com', 'GOOGLE.COM'), treat them as 'google.com' and do not consider capitalization differences as a sign of phishing for this specific domain.
+
+Input: {{{input}}}
+
+Respond with whether or not the input is phishing and the reason for your determination.
+`,
 });
 
 const analyzeUrlMessageFlow = ai.defineFlow(
