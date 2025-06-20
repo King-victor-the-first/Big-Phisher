@@ -24,7 +24,7 @@ _____________
 
 Using Big Phisher is incredibly simple. Here's how you can get your detailed threat report:
 
-1. Visit the Big Phisher Application: Navigate to the Big Phisher web interface.
+1. Access the Web Tool: Visit the Big Phisher application at https://studio--scamsensei-j4j0p.us-central1.hosted.app/.
 2. Paste Your Input: Locate the input field on the page. This is where you'll paste the suspicious URL or the content of the message you want to analyze.
 3. Click "Analyze": Once you've pasted your input, click the "Analyze" or "Scan" button (the exact button name may vary slightly).
 4. Review Your Report: Big Phisher's AI will quickly process your input. In a few moments, a detailed report will appear, highlighting any potential threats and providing insights into the safety of the URL or message.
