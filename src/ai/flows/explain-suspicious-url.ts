@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview Explains what is suspicious about a URL or message.
+ * @fileOverview Explains what is suspicious about a URL or message, and optionally provides a summary of the website's content if it's a URL.
  *
  * - explainSuspiciousUrl - A function that handles the explanation of why a URL or message is suspicious.
  * - ExplainSuspiciousUrlInput - The input type for the explainSuspiciousUrl function.
@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {getWebsiteSummaryTool} from '@/ai/tools/get-website-summary-tool';
 
 const ExplainSuspiciousUrlInputSchema = z.object({
   urlOrMessage: z.string().describe('The URL or message to analyze.'),
@@ -20,7 +21,7 @@ const ExplainSuspiciousUrlInputSchema = z.object({
 export type ExplainSuspiciousUrlInput = z.infer<typeof ExplainSuspiciousUrlInputSchema>;
 
 const ExplainSuspiciousUrlOutputSchema = z.object({
-  explanation: z.string().describe('The explanation of why the URL or message is suspicious.'),
+  explanation: z.string().describe('The explanation of why the URL or message is suspicious, potentially including a summary of the website.'),
 });
 export type ExplainSuspiciousUrlOutput = z.infer<typeof ExplainSuspiciousUrlOutputSchema>;
 
@@ -32,21 +33,53 @@ const prompt = ai.definePrompt({
   name: 'explainSuspiciousUrlPrompt',
   input: {schema: ExplainSuspiciousUrlInputSchema},
   output: {schema: ExplainSuspiciousUrlOutputSchema},
+  tools: [getWebsiteSummaryTool],
   prompt: `You are an AI expert in identifying and explaining phishing attempts.
 
-You are given a URL or message that has been flagged as potentially suspicious. Your task is to explain what aspects of the URL or message raise suspicion.
+Your primary task is to explain what aspects of the provided URL or message raise suspicion.
 
-{% if isPhishing %}
-The URL or message has been flagged as phishing.
-{% endif %}
+Input to analyze: {{{urlOrMessage}}}
 
-{% if safeBrowsingResult %}
-The Safe Browsing API returned the following result: {{{safeBrowsingResult}}}
-{% endif %}
+{{#if isPhishing}}
+The URL or message has already been flagged as phishing by another system.
+{{/if}}
 
-Analyze the following URL or message and provide a detailed explanation of the potential risks and suspicious elements:
+{{#if safeBrowsingResult}}
+Additional context from Safe Browsing API: {{{safeBrowsingResult}}}
+{{/if}}
 
-{{urlOrMessage}}`,
+Instructions:
+1. First, determine if '{{urlOrMessage}}' is a URL. You can infer this from common URL patterns (e.g., starting with http, https, www, or containing a domain like .com, .org, .net, etc.).
+2. If '{{urlOrMessage}}' is a URL:
+   a. Use the 'getWebsiteSummaryTool' with the 'url' parameter set to '{{urlOrMessage}}' to get a brief, objective description of what the website is likely about, based on its URL structure.
+   b. If a summary is returned by the tool (and it's not a generic "unable to determine" message), prepend it to your explanation. For example: "The website ({{{urlOrMessage}}}) appears to be about: [Summary from tool]. Now, regarding its safety and potential risks: ..."
+   c. If the tool indicates it cannot provide a specific summary (e.g., "Unable to determine specific website content..."), you can note this briefly or omit it if it adds no value, then proceed. For example: "A specific summary for the website ({{{urlOrMessage}}}) could not be determined from its URL structure. Regarding its safety and potential risks: ..."
+3. After addressing the website summary (if applicable for URLs), analyze '{{urlOrMessage}}' for any suspicious elements, phishing indicators, or potential risks. Consider aspects like unusual domain names, misleading paths, presence of urgent calls to action, requests for sensitive information, generic greetings, spelling/grammar errors (if a message), etc.
+4. Provide a detailed explanation of these findings. Be specific about why certain elements are concerning.
+
+Combine the website summary (if applicable for URLs) and your risk analysis into a single, coherent explanation.
+If '{{urlOrMessage}}' is not a URL but a message, skip step 2 entirely and directly proceed to analyze the message for suspicious content as per step 3 and 4.
+`,
+  config: {
+    safetySettings: [
+      {
+        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+      {
+        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
+      },
+    ],
+  },
 });
 
 const explainSuspiciousUrlFlow = ai.defineFlow(
@@ -57,6 +90,9 @@ const explainSuspiciousUrlFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+        return { explanation: "Unable to generate an explanation for the provided input." };
+    }
+    return output;
   }
 );
