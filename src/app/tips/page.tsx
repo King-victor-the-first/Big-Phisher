@@ -76,7 +76,7 @@ export default function TipsPage() {
       <div className="mt-12 p-6 bg-primary/10 rounded-lg text-center border border-primary/20">
         <h3 className="text-xl font-headline font-semibold text-primary mb-2">Stay Alert!</h3>
         <p className="text-foreground">
-          Phishing techniques are always evolving. Stay informed and always think twice before clicking or sharing information. If something feels off, it probably is. Use ScamSensei to check suspicious links and messages.
+          Phishing techniques are always evolving. Stay informed and always think twice before clicking or sharing information. If something feels off, it probably is. Use Big Phisher to check suspicious links and messages.
         </p>
       </div>
     </div>

@@ -8,7 +8,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
           <ShieldAlert className="w-8 h-8" />
-          <h1 className="text-2xl font-headline font-semibold">ScamSensei</h1>
+          <h1 className="text-2xl font-headline font-semibold">Big Phisher</h1>
         </Link>
         <nav className="flex items-center gap-2 sm:gap-4">
           <Button variant="ghost" asChild>
